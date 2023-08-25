@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Mass-Mail Dispatcher</title>
+    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css?family=Raleway:200,100,400"
+      rel="stylesheet"
+      type="text/css"
+    />
+  </head>
+
+  <body>
+    <div class="contact-container">
+      <div class="left-col"></div>
+      <div class="right-col">
+        <h1>Mass-Mail Dispatcher</h1>
+        <p>
+          The Mass Mail Dispatcher project is a bulk email dispatching system
+          designed to send emails in bulk to a large number of recipients.
+        </p>
+        <form method="post">
+          <label for="senderEmail">From: </label>
+          <input
+            type="email"
+            id="senderEmail"
+            name="senderEmail"
+            placeholder="Your Email Address"
+            required
+          />
+
+          <label for="subject">Subject:</label>
+          <input id="subject" name="subject" placeholder="Subject" required />
+
+          <label for="csvFile">Email addresses</label>
+          <input
+            type="file"
+            id="csvFile"
+            name="csvFile"
+            placeholder="Your Email Address"
+            accept=".csv"
+            required
+          />
+
+          <label for="message">Message</label>
+          <textarea
+            rows="4"
+            placeholder="Your Message"
+            id="message"
+            name="message"
+            required
+          >
+          </textarea>
+          <input
+            type="button"
+            id="submit"
+            name="submit"
+            class="buttonn"
+            value="Send Emails"
+            onclick="sendEmails()"
+          />
+
+          <div style="display: flex">
+            <div>
+              <p style="color: #393e41; width: 200px">
+                Valid Emails: <span id="validEmailCount"></span>
+              </p>
+              <div id="validEmails"></div>
+            </div>
+            <div style="margin-left: 15px">
+              <p style="color: #393e41">
+                Invalid Emails: <span id="invalidEmailCount"></span>
+              </p>
+              <div id="invalidEmails"></div>
+            </div>
+          </div>
+        </form>
+        <div id="error"></div>
+        <div id="success-msg"></div>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+      (function () {
+        emailjs.init(""); // replace with your actual user ID
+      })();
+
+      function sendEmails() {
+        var senderEmail = document.getElementById("senderEmail").value;
+        var message = document.getElementById("message").value;
+        var subject = document.getElementById("subject").value;
+
+        var validEmails = [];
+        var invalidEmails = [];
+
+        // Read contents of CSV file
+        var file = document.getElementById("csvFile").files[0];
+        var reader = new FileReader();
+        reader.readAsText(file);
+        reader.onload = function (event) {
+          var csv = event.target.result;
+          var lines = csv.split("\n");
+          for (var i = 0; i < lines.length; i++) {
+            var email = lines[i].trim();
+            var emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,3}$/;
+            if (emailRegex.test(email)) {
+              validEmails.push(email);
+            } else {
+              invalidEmails.push(email);
+            }
+          }
+
+          // Send email to valid email addresses
+          for (var j = 0; j < validEmails.length; j++) {
+            var templateParams = {
+              to_name: validEmails[j],
+              from_name: senderEmail,
+              message_html: message,
+              subject_html: subject,
+            };
+
+            // Replace you Service ID ↓ and  Template ID ↓ here.
+            emailjs
+              .send("", "", templateParams)
+              .then(
+                function (response) {
+                  console.log("SUCCESS", response);
+                },
+                function (error) {
+                  console.log("FAILED", error);
+                }
+              );
+          }
+
+          alert("Emails sent to valid email addresses.");
+        };
+      }
+      
+    </script>
+    <script type="text/javascript">
+      document
+        .getElementById("csvFile")
+        .addEventListener("change", function () {
+          var validEmails = [];
+          var invalidEmails = [];
+
+          // Read contents of CSV file
+          var file = document.getElementById("csvFile").files[0];
+          var reader = new FileReader();
+          reader.readAsText(file);
+          reader.onload = function (event) {
+            var csv = event.target.result;
+            var lines = csv.split("\n");
+            for (var i = 0; i < lines.length; i++) {
+              var email = lines[i].trim();
+              var emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,3}$/;
+              if (emailRegex.test(email)) {
+                validEmails.push(email);
+              } else {
+                invalidEmails.push(email);
+              }
+            }
+
+            // Display valid and invalid emails
+            document.getElementById("validEmails").innerHTML =
+              validEmails.join("<br><br>");
+            document.getElementById("invalidEmails").innerHTML =
+              invalidEmails.join("<br><br>");
+            document.getElementById("validEmailCount").innerText =
+              "(" + validEmails.length + ")";
+            document.getElementById("invalidEmailCount").innerText =
+              "(" + invalidEmails.length + ")";
+          };
+        });
+    </script>
+  </body>
+</html>
